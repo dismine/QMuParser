@@ -1,0 +1,116 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2014-04-25T12:01:49
+#
+#-------------------------------------------------
+
+# File with common stuff for whole project
+include(../Valentina.pri)
+
+# We don't need gui library.
+QT       -= gui
+
+# Name of library
+TARGET = qmuparser
+
+# We want create library
+TEMPLATE = lib
+
+# Use out-of-source builds (shadow builds)
+CONFIG -= debug_and_release debug_and_release_target
+
+# We use C++11 standard
+CONFIG += c++11
+
+DEFINES += QMUPARSER_LIBRARY
+
+# directory for executable file
+DESTDIR = bin
+
+# files created moc
+MOC_DIR = moc
+
+# objecs files
+OBJECTS_DIR = obj
+
+SOURCES += \
+    qmuparser.cpp \
+    qmuparsertokenreader.cpp \
+    qmuparsererror.cpp \
+    qmuparsercallback.cpp \
+    qmuparserbytecode.cpp \
+    qmuparserbase.cpp \
+    qmuparsertest.cpp \
+    stable.cpp
+
+HEADERS += \
+    qmuparser.h\
+    qmuparser_global.h \
+    qmuparsertokenreader.h \
+    qmuparsertoken.h \
+    qmuparserfixes.h \
+    qmuparsererror.h \
+    qmuparserdef.h \
+    qmuparsercallback.h \
+    qmuparserbytecode.h \
+    qmuparserbase.h \
+    qmuparsertest.h \
+    stable.h
+
+VERSION = 2.2.4
+
+# Set "make install" command for Unix-like systems.
+unix{
+    isEmpty(PREFIX){
+        PREFIX = $$DEFAULT_PREFIX/lib
+    }
+}
+
+unix:!macx{
+    target.path = $$PREFIX/lib
+    INSTALLS += target
+}
+
+# Set using ccache. Function enable_ccache() defined in Valentina.pri.
+$$enable_ccache()
+
+# Set precompiled headers. Function set_PCH() defined in Valentina.pri.
+$$set_PCH()
+
+CONFIG(debug, debug|release){
+    # Debug mode
+    unix {
+        #Turn on compilers warnings.
+        *-g++{
+        QMAKE_CXXFLAGS += \
+            # Key -isystem disable checking errors in system headers.
+            -isystem "$${OUT_PWD}/$${MOC_DIR}" \
+            $$GCC_DEBUG_CXXFLAGS # See Valentina.pri for more details.
+        }
+        clang*{
+        QMAKE_CXXFLAGS += \
+            # Key -isystem disable checking errors in system headers.
+            -isystem "$${OUT_PWD}/$${MOC_DIR}" \
+            $$CLANG_DEBUG_CXXFLAGS # See Valentina.pri for more details.
+        }
+    } else {
+        *-g++{
+            QMAKE_CXXFLAGS += $$GCC_DEBUG_CXXFLAGS # See Valentina.pri for more details.
+        }
+    }
+
+}else{
+    # Release mode
+    DEFINES += QT_NO_DEBUG_OUTPUT
+
+    unix:!macx{
+        # Turn on debug symbols in release mode on Unix systems.
+        # On Mac OS X temporarily disabled. TODO: find way how to strip binary file.
+        QMAKE_CXXFLAGS_RELEASE += -g -gdwarf-3
+
+        # Strip debug symbols.
+        QMAKE_POST_LINK += objcopy --only-keep-debug $(DESTDIR)/$(TARGET) $(DESTDIR)/$(TARGET).debug &&
+        QMAKE_POST_LINK += strip --strip-debug --strip-unneeded $(DESTDIR)/$(TARGET) &&
+        QMAKE_POST_LINK += objcopy --add-gnu-debuglink $(DESTDIR)/$(TARGET).debug $(DESTDIR)/$(TARGET)
+    }
+}
